@@ -389,19 +389,19 @@ int ordemG = 5;
 void GenerateGraph()
 {
 	criaGrafo(&G, ordemG);
-	// v0
+	/* v0 */
 	acrescentaAresta(G, ordemG, 0, 1, 10);
 	acrescentaAresta(G, ordemG, 0, 4, 5);
 	acrescentaAresta(G, ordemG, 0, 3, 7);
-	// v1
+	/* v1 */
 	acrescentaAresta(G, ordemG, 1, 2, 1);
 	acrescentaAresta(G, ordemG, 1, 4, 2);
 	acrescentaAresta(G, ordemG, 1, 4, 3);
-	// v2
+	/* v2 */
 	acrescentaAresta(G, ordemG, 2, 3, 6);
 	acrescentaAresta(G, ordemG, 2, 3, 4);
 	acrescentaAresta(G, ordemG, 2, 4, 9);
-	// v3
+	/* v1 */
 	acrescentaAresta(G, ordemG, 3, 4, 2);
 
 }
@@ -409,7 +409,7 @@ void GenerateGraph()
 
 int main()
 {
-	//TestQueue();
+	/* TestQueue(); */
 
 	GenerateGraph();
 
