@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include <memory.h>
+#include <string.h>
 
 
 
@@ -18,24 +19,28 @@
  /*
   * Estrutura de dados para representar grafos
   */
-typedef struct aresta
-{ /* Celula de uma lista de arestas */
-	int    nome;
-	struct aresta* prox;
-}Aresta;
 
+typedef struct aresta Aresta;
+typedef struct vert Vert;
 typedef struct vert
 {  /* Cada vertice tem um ponteiro para uma lista de arestas incidentes nele */
 	int nome;
 	Aresta* prim;
 }Vert;
-
+typedef struct aresta
+{ /* Celula de uma lista de arestas */
+	int    nome;
+	struct aresta* prox;
+	int valor;
+	Vert* father;
+	int distancia;
+}Aresta;
 /*
  * Declaracoes das funcoes para manipulacao de grafos
  */
 void criaGrafo(Vert** G, int ordem);
 void destroiGrafo(Vert** G, int ordem);
-int  acrescentaAresta(Vert G[], int ordem, int v1, int v2);
+int  acrescentaAresta(Vert G[], int ordem, int v1, int v2, int valor);
 void imprimeGrafo(Vert G[], int ordem);
 
 
@@ -82,7 +87,7 @@ void destroiGrafo(Vert** G, int ordem)
  * Como o grafo nao e orientado, para uma aresta com extremos i e j
  *   serao criadas, na estrutura de dados, arestas (i,j) e (j,i)
  */
-int acrescentaAresta(Vert G[], int ordem, int v1, int v2)
+int acrescentaAresta(Vert G[], int ordem, int v1, int v2, int valor)
 {
 	Aresta* A1, * A2;
 
@@ -93,16 +98,22 @@ int acrescentaAresta(Vert G[], int ordem, int v1, int v2)
 
 	/* Acrescento aresta na lista do vertice v1 */
 	A1 = (Aresta*)malloc(sizeof(Aresta));
+	A1->valor = valor;
 	A1->nome = v2;
 	A1->prox = G[v1].prim;
+	A1->father = NULL;
+	A1->distancia = INT_MAX;
 	G[v1].prim = A1;
 
 	if (v1 == v2) return 1; /* Aresta e� um laco */
 
 	/* Acrescento aresta na lista do vertice v2 se v2 != v1 */
 	A2 = (Aresta*)malloc(sizeof(Aresta));
+	A2->valor = valor;
 	A2->nome = v1;
 	A2->prox = G[v2].prim;
+	A2->father = NULL;
+	A2->distancia = INT_MAX;
 	G[v2].prim = A2;
 
 	return 1;
@@ -119,13 +130,20 @@ void imprimeGrafo(Vert G[], int ordem)
 
 	printf("\nOrdem:   %d", ordem);
 	printf("\nLista de Adjacencia:\n");
-
+	printf("\nc = custo da aresta\nd = distancia\npi = pai\n");
 	for (i = 0; i < ordem; i++)
 	{
 		printf("\n    v%d: ", i);
 		aux = G[i].prim;
 		for (; aux != NULL; aux = aux->prox)
-			printf("  v%d", aux->nome);
+		{
+			char dist[255];
+			if (aux->distancia == INT_MAX)
+				strcpy(dist, "INFINITO");
+			else
+				sprintf(dist, "%d", aux->distancia);
+			printf("  v%d (c=%003d:d=%s:pi=%003d) ", aux->nome, aux->valor, dist, aux->father);
+		}
 	}
 	printf("\n\n");
 }
@@ -365,35 +383,40 @@ void TestQueue()
 
 
 #pragma region Algo
-
-/* Cria o grafo que iremos utilizar no trabalho*/
+Vert* G;
+int ordemG = 5;
+/* Cria o grafo que iremos utilizar no trabalho, e armazena na variável global G*/
 void GenerateGraph()
 {
+	criaGrafo(&G, ordemG);
+	// v0
+	acrescentaAresta(G, ordemG, 0, 1, 10);
+	acrescentaAresta(G, ordemG, 0, 4, 5);
+	acrescentaAresta(G, ordemG, 0, 3, 7);
+	// v1
+	acrescentaAresta(G, ordemG, 1, 2, 1);
+	acrescentaAresta(G, ordemG, 1, 4, 2);
+	acrescentaAresta(G, ordemG, 1, 4, 3);
+	// v2
+	acrescentaAresta(G, ordemG, 2, 3, 6);
+	acrescentaAresta(G, ordemG, 2, 3, 4);
+	acrescentaAresta(G, ordemG, 2, 4, 9);
+	// v3
+	acrescentaAresta(G, ordemG, 3, 4, 2);
 
 }
-
 #pragma endregion
+
 int main()
 {
-	TestQueue();
+	//TestQueue();
 
-	int i;
-	Vert* G;
-	int ordemG = 6;
+	GenerateGraph();
 
-	criaGrafo(&G, ordemG);
-	acrescentaAresta(G, ordemG, 0, 0);
-	acrescentaAresta(G, ordemG, 0, 1);
-	acrescentaAresta(G, ordemG, 0, 2);
-	acrescentaAresta(G, ordemG, 0, 3);
-	acrescentaAresta(G, ordemG, 2, 4);
-	acrescentaAresta(G, ordemG, 2, 5);
-	acrescentaAresta(G, ordemG, 3, 5);
-	acrescentaAresta(G, ordemG, 4, 5);
+	
 
 	imprimeGrafo(G, ordemG);
 
 	destroiGrafo(&G, ordemG);
-	system("PAUSE");
 	return 0;
 }
