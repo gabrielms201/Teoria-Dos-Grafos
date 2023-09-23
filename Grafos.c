@@ -4,14 +4,18 @@
 #include <memory.h>
 #include <string.h>
 
-
-
-
 /*
-	Graph implementation
-*/
-#pragma region Graph
+ CAIO CEZAR OLIVEIRA FILARDI DO CARMO - 
+ GABRIEL AUGUSTO RIBEIRO GOMES - 32134762
+ LUCAS TONETO PIRES - 31817017
+ RICARDO GABRIEL MARQUES DOS SANTOS RUIZ - 32134908
 
+*/
+
+
+/* 
+Definicoes
+*/
 /*
  * REPRESENTACAO DE GRAFOS - Versao 2023/2
  */
@@ -26,14 +30,15 @@ typedef struct vert
 {  /* Cada vertice tem um ponteiro para uma lista de arestas incidentes nele */
 	int nome;
 	Aresta* prim;
+	Vert* pai;
+	int distancia;
 }Vert;
 typedef struct aresta
 { /* Celula de uma lista de arestas */
 	int    nome;
 	struct aresta* prox;
 	int valor;
-	Vert* father;
-	int distancia;
+
 }Aresta;
 /*
  * Declaracoes das funcoes para manipulacao de grafos
@@ -43,7 +48,48 @@ void destroiGrafo(Vert** G, int ordem);
 int  acrescentaAresta(Vert G[], int ordem, int v1, int v2, int valor);
 void imprimeGrafo(Vert G[], int ordem);
 
+/* A fila de prioridade ira armazenar vertices*/
+#define QUEUE_DATA Vert*
 
+/*
+ * Estrutura de dados para representar filas de prioridade
+ */
+typedef struct
+{
+	int front;
+	int rear;
+	int size;
+	int capacity;
+	QUEUE_DATA* data;
+} MinPriorityQueue;
+/*
+ * Declaracoes das funcoes para manipulacao de filas
+ */
+MinPriorityQueue* createQueue(int capacity);
+int isQueueFull(MinPriorityQueue* queue);
+void enqueue(MinPriorityQueue* queue, QUEUE_DATA item);
+QUEUE_DATA dequeue(MinPriorityQueue* queue);
+void imprimeFila(MinPriorityQueue* queue);
+void destroiFila(MinPriorityQueue* queue);
+
+
+/*
+ * Declaracoes das funcoes para encontrar o caminho mais curto
+ */
+void gerarGrafo();
+void imprimirCaminho(int origem, int destino, Vert G[]);
+void dijkstra(int origem);
+
+/* Variaveis Globais*/
+Vert* G;
+int ordemG = 5;
+MinPriorityQueue* queue;
+
+
+/*
+	Implementacao Grafo
+*/
+#pragma region Graph
 /*
  * Criacao de um grafo com ordem predefinida (passada como argumento),
  *   e, inicilamente, sem nenhuma aresta
@@ -101,8 +147,8 @@ int acrescentaAresta(Vert G[], int ordem, int v1, int v2, int valor)
 	A1->valor = valor;
 	A1->nome = v2;
 	A1->prox = G[v1].prim;
-	A1->father = NULL;
-	A1->distancia = INT_MAX;
+	G[v1].pai = NULL;
+	G[v1].distancia = INT_MAX;
 	G[v1].prim = A1;
 
 	if (v1 == v2) return 1; /* Aresta e� um laco */
@@ -112,8 +158,8 @@ int acrescentaAresta(Vert G[], int ordem, int v1, int v2, int valor)
 	A2->valor = valor;
 	A2->nome = v1;
 	A2->prox = G[v2].prim;
-	A2->father = NULL;
-	A2->distancia = INT_MAX;
+	G[v2].pai = NULL;
+	G[v2].distancia = INT_MAX;
 	G[v2].prim = A2;
 
 	return 1;
@@ -125,55 +171,37 @@ int acrescentaAresta(Vert G[], int ordem, int v1, int v2, int valor)
  */
 void imprimeGrafo(Vert G[], int ordem)
 {
+	printf("\n  -----------------------------------------------------  \n");
 	int i;
 	Aresta* aux;
 
-	printf("\nOrdem:   %d", ordem);
-	printf("\nLista de Adjacencia:\n");
-	printf("\nc = custo da aresta\nd = distancia\npi = pai\n");
+	printf("\n\tOrdem:   %d", ordem);
+	printf("\n\tc = custo da aresta\n\td = distancia\n\tpi = pai\n");
+	printf("\n\tLista de Adjacencia:\n");
+
 	for (i = 0; i < ordem; i++)
 	{
-		printf("\n    v%d: ", i);
 		aux = G[i].prim;
+		printf("\n    -> v%d (pi = %d, d = %d): ", i, (G[i].pai)->nome, G[i].distancia);
+		
 		for (; aux != NULL; aux = aux->prox)
 		{
-			char dist[255];
-			if (aux->distancia == INT_MAX)
-				strcpy(dist, "INFINITO");
-			else
-				sprintf(dist, "%d", aux->distancia);
-			printf("  v%d (c=%003d:d=%s:pi=%003d) ", aux->nome, aux->valor, dist, aux->father);
+			printf("  v%d (c=%003d)", aux->nome, aux->valor);
 		}
 	}
+	printf("\n\n  -----------------------------------------------------  \n");
 	printf("\n\n");
 }
 #pragma endregion
 
 /*
-	Priority Queue implementation
+	Implementacao fila de prioridade
 */
 #pragma region PriorityQueue
-#define QUEUE_DATA int
 
 
 
-typedef struct
-{
-	int front;
-	int rear;
-	int size;
-	int capacity;
-	QUEUE_DATA* data;
-} MinPriorityQueue;
-
-MinPriorityQueue* CreateQueue(int capacity);
-int isQueueFull(MinPriorityQueue* queue);
-void Enqueue(MinPriorityQueue* queue, QUEUE_DATA item);
-int Dequeue(MinPriorityQueue* queue);
-void PrintQueueData(MinPriorityQueue* queue);
-void FreeQueue(MinPriorityQueue* queue);
-
-MinPriorityQueue* CreateQueue(int capacity)
+MinPriorityQueue* createQueue(int capacity)
 {
 	MinPriorityQueue* queue = (MinPriorityQueue*)malloc(sizeof(MinPriorityQueue));
 	if (queue == NULL)
@@ -190,7 +218,7 @@ MinPriorityQueue* CreateQueue(int capacity)
 	int i = 0;
 	for (i; i < capacity; i++)
 	{
-		queue->data[i] = INT_MAX;
+		queue->data[i] = NULL;
 	}
 	return queue;
 }
@@ -202,7 +230,7 @@ int isQueueEmpty(MinPriorityQueue* queue)
 {
 	return (queue->size == 0);
 }
-void Enqueue(MinPriorityQueue* queue, QUEUE_DATA item)
+void enqueue(MinPriorityQueue* queue, QUEUE_DATA item)
 {
 	if (isQueueFull(queue))
 	{
@@ -221,7 +249,7 @@ void Enqueue(MinPriorityQueue* queue, QUEUE_DATA item)
 	for (i; i < size; i++)
 	{
 		QUEUE_DATA current = queue->data[i];
-		if (item < current)
+		if (item->distancia < current->distancia)
 		{
 			int j = queue->rear;
 			if (j >= queue->capacity)
@@ -250,26 +278,27 @@ void Enqueue(MinPriorityQueue* queue, QUEUE_DATA item)
 	}
 
 }
-int Dequeue(MinPriorityQueue* queue)
+QUEUE_DATA dequeue(MinPriorityQueue* queue)
 {
 	if (isQueueEmpty(queue))
-		return INT_MIN;
-	int item = queue->data[queue->front];
+		return NULL;
+	QUEUE_DATA item = queue->data[queue->front];
 	queue->front = (queue->front + 1) % queue->capacity;
 	queue->size = queue->size - 1;
 	return item;
 }
-void PrintQueueData(MinPriorityQueue* queue)
+void imprimeFila(MinPriorityQueue* queue)
 {
+	printf("Printing queue...\n");
 	int j = queue->front;
 	int i = 0;
 	for (i; i < queue->size; i++)
 	{
-		printf(" %d ", queue->data[j++]);
+		printf(" %d ", queue->data[j++]->distancia);
 	}
 	printf("\n");
 }
-void FreeQueue(MinPriorityQueue* queue)
+void destroiFila(MinPriorityQueue* queue)
 {
 	free(queue->data);
 	free(queue);
@@ -277,116 +306,9 @@ void FreeQueue(MinPriorityQueue* queue)
 
 #pragma endregion
 
-void TestQueue()
-{
-	MinPriorityQueue* queue = CreateQueue(300);
 
-	Enqueue(queue, -200);
-	PrintQueueData(queue);
-	Enqueue(queue, -1);
-	PrintQueueData(queue);
-	Enqueue(queue, 0);
-	PrintQueueData(queue);
-	Enqueue(queue, 40);
-	PrintQueueData(queue);
-	Enqueue(queue, 30);
-	PrintQueueData(queue);
-	Enqueue(queue, 20);
-	PrintQueueData(queue);
-	Enqueue(queue, 10);
-	PrintQueueData(queue);
-	Enqueue(queue, 50);
-	PrintQueueData(queue);
-	Enqueue(queue, 1);
-	PrintQueueData(queue);
-	Enqueue(queue, -300);
-	PrintQueueData(queue);
-
-
-	while (!isQueueEmpty(queue))
-	{
-		QUEUE_DATA value = Dequeue(queue);
-		printf("%d dequeued from queue\n\n",
-			value);
-	}
-
-	printf("Starting enqueue again\n");
-	Enqueue(queue, -200);
-	PrintQueueData(queue);
-	Enqueue(queue, -1);
-	PrintQueueData(queue);
-	Enqueue(queue, 0);
-	PrintQueueData(queue);
-	Enqueue(queue, 40);
-	PrintQueueData(queue);
-	Enqueue(queue, 30);
-	PrintQueueData(queue);
-	Enqueue(queue, 20);
-	PrintQueueData(queue);
-	Enqueue(queue, 10);
-	PrintQueueData(queue);
-	Enqueue(queue, 50);
-	PrintQueueData(queue);
-	Enqueue(queue, 1);
-	PrintQueueData(queue);
-	Enqueue(queue, -300);
-	PrintQueueData(queue);
-
-
-	while (!isQueueEmpty(queue))
-	{
-		QUEUE_DATA value = Dequeue(queue);
-		printf("%d dequeued from queue\n\n",
-			value);
-	}
-	PrintQueueData(queue);
-
-	while (!isQueueEmpty(queue))
-	{
-		QUEUE_DATA value = Dequeue(queue);
-		printf("%d dequeued from queue\n\n",
-			value);
-	}
-
-	printf("Starting enqueue again\n");
-	Enqueue(queue, -200);
-	PrintQueueData(queue);
-	Enqueue(queue, -1);
-	PrintQueueData(queue);
-	Enqueue(queue, 0);
-	PrintQueueData(queue);
-	Enqueue(queue, 40);
-	PrintQueueData(queue);
-	Enqueue(queue, 30);
-	PrintQueueData(queue);
-	Enqueue(queue, 20);
-	PrintQueueData(queue);
-	Enqueue(queue, 10);
-	PrintQueueData(queue);
-	Enqueue(queue, 50);
-	PrintQueueData(queue);
-	Enqueue(queue, 1);
-	PrintQueueData(queue);
-	Enqueue(queue, -300);
-	PrintQueueData(queue);
-
-
-	while (!isQueueEmpty(queue))
-	{
-		QUEUE_DATA value = Dequeue(queue);
-		printf("%d dequeued from queue\n\n",
-			value);
-	}
-	PrintQueueData(queue);
-	FreeQueue(queue);
-}
-
-
-#pragma region Algo
-Vert* G;
-int ordemG = 5;
 /* Cria o grafo que iremos utilizar no trabalho, e armazena na variável global G*/
-void GenerateGraph()
+void gerarGrafo()
 {
 	criaGrafo(&G, ordemG);
 	/* v0 */
@@ -405,18 +327,82 @@ void GenerateGraph()
 	acrescentaAresta(G, ordemG, 3, 4, 2);
 
 }
-#pragma endregion
+/* Função para imprimir o caminho mínimo a partir da origem para um vértice */
+void imprimirCaminho(int origem, int destino, Vert G[])
+{
+	if (destino == origem)
+	{
+		return;
+	}
+	else if (G[destino].pai == NULL)
+	{
+		printf("Nao existe caminho de %d para %d", origem, destino);
+	}
+	else
+	{
+		imprimirCaminho(origem, G[destino].pai->nome, G);
+		printf(" -> v%d", destino, G[destino].distancia);
+	}
+}
+/* Algoritmo de Dijkstra*/ 
+void dijkstra(int origem)
+{
+	/* Inicialização das estruturas de dados - Initialize Single-Source*/ 
+	int i;
+	for (i = 0; i < ordemG; i++)
+	{
+		G[i].distancia = INT_MAX;
+		G[i].pai = NULL;
+	}
+	G[origem].distancia = 0;
+	G[origem].pai = G;
+	enqueue(queue, &(G[origem]));
+	while (!isQueueEmpty(queue))
+	{
+		/* Recupera menor valor da fila  */
+		QUEUE_DATA u = dequeue(queue);
+		Aresta* aux;
+		aux = u->prim;
+		/* para cada vertice adjacente a u: */
+		for (; aux != NULL; aux = aux->prox)
+		{
+			/* Recupera valor de v (vertice adjacente a u)*/
+			int v = aux->nome;
+			/* Relax: passo guloso */
+			int dist = G[v].distancia;
+			if (dist > u->distancia + aux->valor)
+			{
+				G[v].distancia = u->distancia + aux->valor;
+				G[v].pai = u;
+				enqueue(queue, &(G[v]));
+			}
+		}
+	}
+
+	for (i = 0; i < ordemG; i++)
+	{
+		if (i != origem)
+		{
+			printf("Distancia de v%d para v%d: %d.\n --> Caminho: \t", origem, i, G[i].distancia);
+			imprimirCaminho(origem, i, G);
+			printf("\n");
+		}
+	}
+}
 
 int main()
 {
-	/* TestQueue(); */
+	queue = createQueue(1000);
+	gerarGrafo();
 
-	GenerateGraph();
-
-	
+	int origem = 0; /* Define o vértice de origem para o algoritmo de Dijkstra*/
+	dijkstra(origem); /* Executa o algoritmo de dijkstra */
 
 	imprimeGrafo(G, ordemG);
 
+
 	destroiGrafo(&G, ordemG);
+	destroiFila(queue);
+
 	return 0;
 }
