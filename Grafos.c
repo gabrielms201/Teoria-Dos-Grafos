@@ -12,10 +12,13 @@
 
 */
 
+/* ---------------------------------------------------------------------------- fim cabecalho | inicio de definicoes */
+
 
 /* 
-Definicoes
+	Definicoes
 */
+
 /*
  * REPRESENTACAO DE GRAFOS - Versao 2023/2
  */
@@ -56,28 +59,36 @@ void imprimeGrafo(Vert G[], int ordem);
  */
 typedef struct
 {
-	int front;
-	int rear;
-	int size;
-	int capacity;
-	QUEUE_DATA* data;
+	int front; /* index do comeco da fila */
+	int rear; /* index do fim da fila */
+	int size; /* tamanho atual da fila */
+	int capacity; /* capacidade total da fila */
+	QUEUE_DATA* data; /* array do tipo QUEUE_DATA (nesse caso, vertice) que armazena os dados que manipulamos */
 } MinPriorityQueue;
 /*
  * Declaracoes das funcoes para manipulacao de filas
  */
 MinPriorityQueue* createQueue(int capacity);
+/* Verifica se a fila esta cheia */
 int isQueueFull(MinPriorityQueue* queue);
+/* Insere na fila de prioridade*/
 void enqueue(MinPriorityQueue* queue, QUEUE_DATA item);
+/* Remove da fila de prioridade*/
 QUEUE_DATA dequeue(MinPriorityQueue* queue);
+/* Imprime a fila de prioridade */
 void imprimeFila(MinPriorityQueue* queue);
+/* Desaloca fila de prioridade*/
 void destroiFila(MinPriorityQueue* queue);
 
 
 /*
  * Declaracoes das funcoes para encontrar o caminho mais curto
  */
+/* Cria o grafo do mapa e atribui na variavel gloabal G*/
 void gerarGrafo();
+/* Imprime o caminho mais curto de um vertice */
 void imprimirCaminho(int origem, int destino, Vert G[]);
+/* Executa o algoritmo de dijkstra */
 void dijkstra(int origem);
 
 /* Variaveis Globais*/
@@ -86,10 +97,15 @@ int ordemG = 5;
 MinPriorityQueue* queue;
 
 
+
+/* ---------------------------------------------------------------------------- fim declaracoes | inicio de implementacoes */
+
+
+
+
 /*
 	Implementacao Grafo
 */
-#pragma region Graph
 /*
  * Criacao de um grafo com ordem predefinida (passada como argumento),
  *   e, inicilamente, sem nenhuma aresta
@@ -192,14 +208,10 @@ void imprimeGrafo(Vert G[], int ordem)
 	printf("\n\n  -----------------------------------------------------  \n");
 	printf("\n\n");
 }
-#pragma endregion
 
 /*
 	Implementacao fila de prioridade
 */
-#pragma region PriorityQueue
-
-
 
 MinPriorityQueue* createQueue(int capacity)
 {
@@ -238,6 +250,7 @@ void enqueue(MinPriorityQueue* queue, QUEUE_DATA item)
 		return;
 	}
 	int i = queue->front;
+	/* Se o tamanho eh 0, basta inserir no fim da fila */
 	if (queue->size == 0)
 	{
 		queue->rear = (queue->rear + 1) % queue->capacity;
@@ -245,12 +258,14 @@ void enqueue(MinPriorityQueue* queue, QUEUE_DATA item)
 		queue->size = queue->size + 1;
 		return;
 	}
+	/* Caso o contrario, devemos definir a prioridade*/
 	int size = queue->rear + 1;
 	for (i; i < size; i++)
 	{
 		QUEUE_DATA current = queue->data[i];
 		if (item->distancia < current->distancia)
 		{
+			/* Se encontramos um valor menor, eh pq encontramos a prioridade*/
 			int j = queue->rear;
 			if (j >= queue->capacity)
 			{
@@ -267,8 +282,10 @@ void enqueue(MinPriorityQueue* queue, QUEUE_DATA item)
 			queue->rear = (queue->rear + 1) % queue->capacity;
 			queue->data[i] = item;
 			queue->size = queue->size + 1;
+			/* Agora que encontramos a prioridade, podemos finalmente quebrar o laco */
 			break;
 		}
+		/* Se nao encontramos, eh pq a prioridade eh baixa (final da fila) */
 		else if (i == queue->rear)
 		{
 			queue->rear = (queue->rear + 1) % queue->capacity;
@@ -304,7 +321,7 @@ void destroiFila(MinPriorityQueue* queue)
 	free(queue);
 }
 
-#pragma endregion
+/* Fim das estruturas de dados */
 
 
 /* Cria o grafo que iremos utilizar no trabalho, e armazena na variável global G*/
@@ -354,31 +371,51 @@ void dijkstra(int origem)
 		G[i].distancia = INT_MAX;
 		G[i].pai = NULL;
 	}
+	/* Precisamos iniciar a distancia de v0 para v0 como 0, e tambem seu pai como ele mesmo.
+		Alem de inserir na fila de prioridade */
 	G[origem].distancia = 0;
 	G[origem].pai = G;
 	enqueue(queue, &(G[origem]));
+
+
 	while (!isQueueEmpty(queue))
 	{
 		/* Recupera menor valor da fila  */
 		QUEUE_DATA u = dequeue(queue);
 		Aresta* aux;
-		aux = u->prim;
 		/* para cada vertice adjacente a u: */
+		aux = u->prim;
 		for (; aux != NULL; aux = aux->prox)
 		{
 			/* Recupera valor de v (vertice adjacente a u)*/
 			int v = aux->nome;
-			/* Relax: passo guloso */
+			/* Relax(v,u,w(u,v)): passo guloso */
 			int dist = G[v].distancia;
 			if (dist > u->distancia + aux->valor)
 			{
+				/* se a distancia nova encontrada eh menor, entao alteramos para essa distancia menor encontrada */
 				G[v].distancia = u->distancia + aux->valor;
 				G[v].pai = u;
+				/* Inserimos o valor na fila de prioridade, que sera reajustado de acordo com seu valor
+					Como eh uma fila de prioridade, os valores menores ficarao no comeco da fila */
 				enqueue(queue, &(G[v]));
 			}
 		}
 	}
 
+}
+
+int main()
+{
+	/* Aqui criamos as estruturas que vamos utilizar 
+		(utilizamos variaveis globais para não precisar passar como referencia e para facilitar as funcoes) */
+	queue = createQueue(1000);
+	gerarGrafo();
+
+	int origem = 0; /* Define o vértice de origem para o algoritmo de Dijkstra. Nesse caso, o v0*/
+	dijkstra(origem); /* Executa o algoritmo de dijkstra */
+	/* Agora que o algoritmo foi executado, podemos imprimir os caminhos */
+	int i = 0;
 	for (i = 0; i < ordemG; i++)
 	{
 		if (i != origem)
@@ -388,19 +425,9 @@ void dijkstra(int origem)
 			printf("\n");
 		}
 	}
-}
-
-int main()
-{
-	queue = createQueue(1000);
-	gerarGrafo();
-
-	int origem = 0; /* Define o vértice de origem para o algoritmo de Dijkstra*/
-	dijkstra(origem); /* Executa o algoritmo de dijkstra */
-
 	imprimeGrafo(G, ordemG);
 
-
+	/* Por fim, liberamos os dados da heap */
 	destroiGrafo(&G, ordemG);
 	destroiFila(queue);
 
