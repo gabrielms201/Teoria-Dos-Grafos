@@ -15,7 +15,7 @@
 /* ---------------------------------------------------------------------------- fim cabecalho | inicio de definicoes */
 
 
-/* 
+/*
 	Definicoes
 */
 
@@ -84,7 +84,7 @@ void destroiFila(MinPriorityQueue* queue);
 /*
  * Declaracoes das funcoes para encontrar o caminho mais curto
  */
-/* Cria o grafo do mapa e atribui na variavel gloabal G*/
+ /* Cria o grafo do mapa e atribui na variavel gloabal G*/
 void gerarGrafo();
 /* Imprime o caminho mais curto de um vertice */
 void imprimirCaminho(int origem, int destino, Vert G[]);
@@ -93,7 +93,7 @@ void dijkstra(int origem);
 
 /* Variaveis Globais*/
 Vert* G;
-int ordemG = 5;
+int ordemG = 50;
 MinPriorityQueue* queue;
 
 
@@ -198,11 +198,17 @@ void imprimeGrafo(Vert G[], int ordem)
 	for (i = 0; i < ordem; i++)
 	{
 		aux = G[i].prim;
-		printf("\n    -> v%d (pi = %d, d = %d): ", i, (G[i].pai)->nome, G[i].distancia);
-		
+		/* Feito para verificar se o pai eh nulo. 
+			Caso o pai seja nulo, entao nao imprimimos o valor do mesmo 
+			Evitando assim segmentation fault */
+		if (G[i].pai == NULL)
+			printf("\n    -> v%d (pi = NULL, d = %d): ", i, G[i].distancia);
+		else
+			printf("\n    -> v%d (pi = %d, d = %d): ", i, (G[i].pai)->nome, G[i].distancia);
+
 		for (; aux != NULL; aux = aux->prox)
 		{
-			printf("  v%d (c=%003d)", aux->nome, aux->valor);
+			printf("  v%d (c=%03d)", aux->nome, aux->valor);
 		}
 	}
 	printf("\n\n  -----------------------------------------------------  \n");
@@ -289,7 +295,7 @@ void enqueue(MinPriorityQueue* queue, QUEUE_DATA item)
 		else if (i == queue->rear)
 		{
 			queue->rear = (queue->rear + 1) % queue->capacity;
-			queue->data[i+1] = item;
+			queue->data[i + 1] = item;
 			queue->size = queue->size + 1;
 		}
 	}
@@ -329,20 +335,54 @@ void gerarGrafo()
 {
 	criaGrafo(&G, ordemG);
 	/* v0 */
-	acrescentaAresta(G, ordemG, 0, 1, 10);
-	acrescentaAresta(G, ordemG, 0, 4, 5);
-	acrescentaAresta(G, ordemG, 0, 3, 7);
+	acrescentaAresta(G, ordemG, 0, 1, 88);
 	/* v1 */
-	acrescentaAresta(G, ordemG, 1, 2, 1);
-	acrescentaAresta(G, ordemG, 1, 4, 2);
-	acrescentaAresta(G, ordemG, 1, 4, 3);
+	acrescentaAresta(G, ordemG, 1, 2, 85);
+	acrescentaAresta(G, ordemG, 1, 14, 400);
 	/* v2 */
-	acrescentaAresta(G, ordemG, 2, 3, 6);
-	acrescentaAresta(G, ordemG, 2, 3, 4);
-	acrescentaAresta(G, ordemG, 2, 4, 9);
-	/* v1 */
-	acrescentaAresta(G, ordemG, 3, 4, 2);
-
+	acrescentaAresta(G, ordemG, 2, 7, 220);
+	/* v3 */
+	acrescentaAresta(G, ordemG, 3, 4, 350);
+	/* v4 */
+	acrescentaAresta(G, ordemG, 4, 5, 190);
+	/* v5 */
+	acrescentaAresta(G, ordemG, 5, 6, 210);
+	/* v6 */
+	acrescentaAresta(G, ordemG, 6, 15, 1000);
+	/* v7 */
+	acrescentaAresta(G, ordemG, 7, 8, 220);
+	/* v8 */
+	acrescentaAresta(G, ordemG, 8, 9, 450);
+	/* v9 */
+	acrescentaAresta(G, ordemG, 9, 10, 400);
+	/* v10 */
+	acrescentaAresta(G, ordemG, 10, 11, 85);
+	/* v11 */
+	acrescentaAresta(G, ordemG, 11, 12, 25);
+	/* v12 */
+	acrescentaAresta(G, ordemG, 12, 13, 325);
+	/* v13 */
+	acrescentaAresta(G, ordemG, 13, 25, 270);
+	/* v14 */
+	acrescentaAresta(G, ordemG, 14, 3, 350);
+	acrescentaAresta(G, ordemG, 14, 15, 130);
+	acrescentaAresta(G, ordemG, 14, 16, 300);
+	/* v16 */
+	acrescentaAresta(G, ordemG, 16, 17, 130);
+	acrescentaAresta(G, ordemG, 16, 21, 180);
+	/* v17 */
+	acrescentaAresta(G, ordemG, 17, 18, 74);
+	/* v18 */
+	acrescentaAresta(G, ordemG, 18, 19, 300);
+	/* v19 */
+	acrescentaAresta(G, ordemG, 19, 20, 225);
+	/* v21 */
+	acrescentaAresta(G, ordemG, 21, 22, 300);
+	/* v22 */
+	acrescentaAresta(G, ordemG, 22, 23, 210);
+	acrescentaAresta(G, ordemG, 22, 24, 270);
+	/* v24 */
+	acrescentaAresta(G, ordemG, 24, 26, 1000);
 }
 /* Função para imprimir o caminho mínimo a partir da origem para um vértice */
 void imprimirCaminho(int origem, int destino, Vert G[])
@@ -358,13 +398,13 @@ void imprimirCaminho(int origem, int destino, Vert G[])
 	else
 	{
 		imprimirCaminho(origem, G[destino].pai->nome, G);
-		printf(" -> v%d", destino, G[destino].distancia);
+		printf(" -> v%d", destino);
 	}
 }
-/* Algoritmo de Dijkstra*/ 
+/* Algoritmo de Dijkstra*/
 void dijkstra(int origem)
 {
-	/* Inicialização das estruturas de dados - Initialize Single-Source*/ 
+	/* Inicialização das estruturas de dados - Initialize Single-Source*/
 	int i;
 	for (i = 0; i < ordemG; i++)
 	{
@@ -407,7 +447,7 @@ void dijkstra(int origem)
 
 int main()
 {
-	/* Aqui criamos as estruturas que vamos utilizar 
+	/* Aqui criamos as estruturas que vamos utilizar
 		(utilizamos variaveis globais para não precisar passar como referencia e para facilitar as funcoes) */
 	queue = createQueue(1000);
 	gerarGrafo();
