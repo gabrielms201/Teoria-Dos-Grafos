@@ -93,7 +93,7 @@ void dijkstra(int origem);
 
 /* Variaveis Globais*/
 Vert* G;
-int ordemG = 50;
+int ordemG = 27;
 MinPriorityQueue* queue;
 
 
