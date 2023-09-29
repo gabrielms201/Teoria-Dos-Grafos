@@ -383,6 +383,8 @@ void gerarGrafo()
 	acrescentaAresta(G, ordemG, 16, 21, 180);
 	/* v17 */
 	acrescentaAresta(G, ordemG, 17, 18, 74);
+	acrescentaAresta(G, ordemG, 17, 26, 400);
+
 	/* v18 */
 	acrescentaAresta(G, ordemG, 18, 19, 300);
 	/* v19 */
@@ -438,7 +440,7 @@ void updateItem(MinPriorityQueue* queue, int uniqueKey, int distancia, Vert* pai
 
 			int originalNome = queue->data[i]->nome;
 			Aresta* originalPrim = queue->data[i]->prim;
-
+			// todo: corrigir memory leak
 			Vert* novoVert = (Vert*)malloc(sizeof(Vert) * 1);
 			novoVert->nome = originalNome;
 			novoVert->prim = originalPrim;
@@ -488,8 +490,16 @@ void dijkstra(int origem)
 	{
 		/* Recupera menor valor da fila  */
 		QUEUE_DATA u = dequeue(queue);
-		Aresta* aux;
 		if (u == NULL) continue; /* Se o elemento for nulo, eh pq deletamos ele, enetão vamos para o proximo */
+		Aresta* aux;
+		if (u->distancia == 788) // 16
+			printf("");
+		if (u->distancia == 918) // 17
+			printf("");
+		if (u->distancia == 1318) // v26
+			printf("");
+
+
 		/* para cada vertice adjacente a u: */
 		aux = u->prim;
 		for (; aux != NULL; aux = aux->prox)
@@ -501,13 +511,11 @@ void dijkstra(int origem)
 			if (dist > u->distancia + aux->valor)
 			{
 				/* se a distancia nova encontrada eh menor, entao alteramos para essa distancia menor encontrada */
-				imprimeFila(queue);
 				/* Ajustamos o valor na fila de prioridade, que sera reajustado de acordo com seu valor
 						Como eh uma fila de prioridade, os valores menores ficarao no comeco da fila */
 				updateItem(queue, G[v].nome, u->distancia + aux->valor, u);
 				G[v].distancia = u->distancia + aux->valor;
 				G[v].pai = u;
-				imprimeFila(queue);
 			}
 		}
 	}
