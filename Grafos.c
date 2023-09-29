@@ -79,6 +79,9 @@ QUEUE_DATA dequeue(MinPriorityQueue* queue);
 void imprimeFila(MinPriorityQueue* queue);
 /* Desaloca fila de prioridade*/
 void destroiFila(MinPriorityQueue* queue);
+/* Atualiza um item da fila*/
+void updateItem(MinPriorityQueue* queue, int uniqueKey, int distancia, Vert* pai);
+
 
 
 /*
@@ -418,7 +421,7 @@ void imprimirCaminho(int origem, int destino, Vert G[])
 
 void updateItem(MinPriorityQueue* queue, int uniqueKey, int distancia, Vert* pai)
 {
-	// Verifique se a fila está vazia
+	/* Se a fila estiver vazia, nao tem o que atualizar */
 	if (isQueueEmpty(queue))
 	{
 		fprintf(stderr, "Erro ao atualizar item na fila de prioridade: Fila vazia");
@@ -428,25 +431,28 @@ void updateItem(MinPriorityQueue* queue, int uniqueKey, int distancia, Vert* pai
 	int i = 0;
 	int found = 0;
 
-	// Percorra a fila para encontrar o item com base na chave única
+	/* Agora basta percorrer para atualizar */
 	int size = queue->rear + 1;
 	for (i; i < size; i++)
 	{
 		if (queue->data[i] == NULL) continue;
 		if (queue->data[i]->nome == uniqueKey)
 		{
-			// Item encontrado, atualize-o com o novo valor
-
+			/* Item Encontrado*/
 
 			int originalNome = queue->data[i]->nome;
 			Aresta* originalPrim = queue->data[i]->prim;
-			// todo: corrigir memory leak
+
+			/* Alocamos um novo vertice com o novo valor 
+				Se alterarmos o valor do atual, teriamos que rearranjar a fila*/
 			Vert* novoVert = (Vert*)malloc(sizeof(Vert) * 1);
 			novoVert->nome = originalNome;
 			novoVert->prim = originalPrim;
 			novoVert->pai = pai;
 			novoVert->distancia = distancia;
+			/* Ao inves de rearranjar tudo novamente para remover, vamos apenas atribuir como null ptr*/
 			queue->data[i] = NULL;
+			/* E entao, enfileirar o novo valor*/
 			enqueue(queue, novoVert);
 			found = 1;
 			break;
@@ -490,15 +496,10 @@ void dijkstra(int origem)
 	{
 		/* Recupera menor valor da fila  */
 		QUEUE_DATA u = dequeue(queue);
-		if (u == NULL) continue; /* Se o elemento for nulo, eh pq deletamos ele, enetão vamos para o proximo */
+		/* Se o elemento for nulo, eh pq deletamos ele, então vamos apenas para o proximo */
+		/* Fizemos isso para evitar o trabalho de realocar a fila toda vez que um item eh atualizado*/
+		if (u == NULL) continue; 
 		Aresta* aux;
-		if (u->distancia == 788) // 16
-			printf("");
-		if (u->distancia == 918) // 17
-			printf("");
-		if (u->distancia == 1318) // v26
-			printf("");
-
 
 		/* para cada vertice adjacente a u: */
 		aux = u->prim;
