@@ -22,7 +22,7 @@
 /*
  * REPRESENTACAO DE GRAFOS - Versao 2023/2
  */
-
+#define INFINITO 999999
  /*
   * Estrutura de dados para representar grafos
   */
@@ -164,7 +164,7 @@ int acrescentaAresta(Vert G[], int ordem, int v1, int v2, int valor)
 	A1->nome = v2;
 	A1->prox = G[v1].prim;
 	G[v1].pai = NULL;
-	G[v1].distancia = INT_MAX;
+	G[v1].distancia = INFINITO;
 	G[v1].prim = A1;
 
 	if (v1 == v2) return 1; /* Aresta e� um laco */
@@ -175,7 +175,7 @@ int acrescentaAresta(Vert G[], int ordem, int v1, int v2, int valor)
 	A2->nome = v1;
 	A2->prox = G[v2].prim;
 	G[v2].pai = NULL;
-	G[v2].distancia = INT_MAX;
+	G[v2].distancia = INFINITO;
 	G[v2].prim = A2;
 
 	return 1;
@@ -198,8 +198,8 @@ void imprimeGrafo(Vert G[], int ordem)
 	for (i = 0; i < ordem; i++)
 	{
 		aux = G[i].prim;
-		/* Feito para verificar se o pai eh nulo. 
-			Caso o pai seja nulo, entao nao imprimimos o valor do mesmo 
+		/* Feito para verificar se o pai eh nulo.
+			Caso o pai seja nulo, entao nao imprimimos o valor do mesmo
 			Evitando assim segmentation fault */
 		if (G[i].pai == NULL)
 			printf("\n    -> v%d (pi = NULL, d = %d): ", i, G[i].distancia);
@@ -269,6 +269,8 @@ void enqueue(MinPriorityQueue* queue, QUEUE_DATA item)
 	for (i; i < size; i++)
 	{
 		QUEUE_DATA current = queue->data[i];
+		if (current == NULL)
+			continue; /*Para casos onde deletamos um item*/
 		if (item->distancia < current->distancia)
 		{
 			/* Se encontramos um valor menor, eh pq encontramos a prioridade*/
@@ -317,7 +319,16 @@ void imprimeFila(MinPriorityQueue* queue)
 	int i = 0;
 	for (i; i < queue->size; i++)
 	{
-		printf(" %d ", queue->data[j++]->distancia);
+		QUEUE_DATA elem = queue->data[j];
+		if (elem == NULL)
+		{
+			printf("");
+		}
+		else
+		{
+			printf(" %d ", elem->distancia);
+		}
+		j++;
 	}
 	printf("\n");
 }
@@ -401,6 +412,61 @@ void imprimirCaminho(int origem, int destino, Vert G[])
 		printf(" -> v%d", destino);
 	}
 }
+
+
+void updateItem(MinPriorityQueue* queue, int uniqueKey, int distancia, Vert* pai)
+{
+	// Verifique se a fila está vazia
+	if (isQueueEmpty(queue))
+	{
+		fprintf(stderr, "Erro ao atualizar item na fila de prioridade: Fila vazia");
+		return;
+	}
+
+	int i = 0;
+	int found = 0;
+
+	// Percorra a fila para encontrar o item com base na chave única
+	int size = queue->rear + 1;
+	for (i; i < size; i++)
+	{
+		if (queue->data[i] == NULL) continue;
+		if (queue->data[i]->nome == uniqueKey)
+		{
+			// Item encontrado, atualize-o com o novo valor
+
+
+			int originalNome = queue->data[i]->nome;
+			Aresta* originalPrim = queue->data[i]->prim;
+
+			Vert* novoVert = (Vert*)malloc(sizeof(Vert) * 1);
+			novoVert->nome = originalNome;
+			novoVert->prim = originalPrim;
+			novoVert->pai = pai;
+			novoVert->distancia = distancia;
+			queue->data[i] = NULL;
+			enqueue(queue, novoVert);
+			found = 1;
+			break;
+		}
+	}
+
+	if (!found)
+	{
+		fprintf(stderr, "Erro ao atualizar item na fila de prioridade: Item com chave unica nao encontrado\n");
+		return;
+	}
+}
+
+void preencheFila()
+{
+	int i;
+	for (i = 0; i < ordemG; i++)
+	{
+		enqueue(queue, &(G[i]));
+	}
+}
+
 /* Algoritmo de Dijkstra*/
 void dijkstra(int origem)
 {
@@ -408,14 +474,14 @@ void dijkstra(int origem)
 	int i;
 	for (i = 0; i < ordemG; i++)
 	{
-		G[i].distancia = INT_MAX;
+		G[i].distancia = INFINITO;
 		G[i].pai = NULL;
 	}
 	/* Precisamos iniciar a distancia de v0 para v0 como 0, e tambem seu pai como ele mesmo.
 		Alem de inserir na fila de prioridade */
 	G[origem].distancia = 0;
 	G[origem].pai = G;
-	enqueue(queue, &(G[origem]));
+	preencheFila();
 
 
 	while (!isQueueEmpty(queue))
@@ -423,6 +489,7 @@ void dijkstra(int origem)
 		/* Recupera menor valor da fila  */
 		QUEUE_DATA u = dequeue(queue);
 		Aresta* aux;
+		if (u == NULL) continue; /* Se o elemento for nulo, eh pq deletamos ele, enetão vamos para o proximo */
 		/* para cada vertice adjacente a u: */
 		aux = u->prim;
 		for (; aux != NULL; aux = aux->prox)
@@ -434,11 +501,13 @@ void dijkstra(int origem)
 			if (dist > u->distancia + aux->valor)
 			{
 				/* se a distancia nova encontrada eh menor, entao alteramos para essa distancia menor encontrada */
+				imprimeFila(queue);
+				/* Ajustamos o valor na fila de prioridade, que sera reajustado de acordo com seu valor
+						Como eh uma fila de prioridade, os valores menores ficarao no comeco da fila */
+				updateItem(queue, G[v].nome, u->distancia + aux->valor, u);
 				G[v].distancia = u->distancia + aux->valor;
 				G[v].pai = u;
-				/* Inserimos o valor na fila de prioridade, que sera reajustado de acordo com seu valor
-					Como eh uma fila de prioridade, os valores menores ficarao no comeco da fila */
-				enqueue(queue, &(G[v]));
+				imprimeFila(queue);
 			}
 		}
 	}
