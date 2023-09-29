@@ -405,6 +405,7 @@ void imprimirCaminho(int origem, int destino, Vert G[])
 {
 	if (destino == origem)
 	{
+		printf("v%d", origem);
 		return;
 	}
 	else if (G[destino].pai == NULL)
