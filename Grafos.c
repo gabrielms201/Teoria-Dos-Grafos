@@ -370,7 +370,7 @@ void gerarGrafo()
 	/* v9 */
 	acrescentaAresta(G, ordemG, 9, 10, 400);
 	/* v10 */
-	acrescentaAresta(G, ordemG, 10, 11, 85);
+	acrescentaAresta(G, ordemG, 10, 11, 210);
 	/* v11 */
 	acrescentaAresta(G, ordemG, 11, 12, 25);
 	/* v12 */
