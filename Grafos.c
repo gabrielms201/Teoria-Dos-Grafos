@@ -5,6 +5,7 @@
 #include <string.h>
 
 /*
+
  CAIO CEZAR OLIVEIRA FILARDI DO CARMO - 987307908
  GABRIEL AUGUSTO RIBEIRO GOMES - 32134762
  LUCAS TONETO PIRES - 31817017
@@ -19,10 +20,8 @@
 	Definicoes
 */
 
-/*
- * REPRESENTACAO DE GRAFOS - Versao 2023/2
- */
-#define INFINITO 999999
+ /* Foi utilizado esse valor ao inves de INT_MAX para não ocorrer overflow na hora da soma para comparacao no algoritmo de dijkstra */
+#define INFINITO 999999 
  /*
   * Estrutura de dados para representar grafos
   */
@@ -102,8 +101,6 @@ MinPriorityQueue* queue;
 
 
 /* ---------------------------------------------------------------------------- fim declaracoes | inicio de implementacoes */
-
-
 
 
 /*
@@ -400,7 +397,7 @@ void gerarGrafo()
 	/* v24 */
 	acrescentaAresta(G, ordemG, 24, 26, 1000);
 }
-/* Função para imprimir o caminho mínimo a partir da origem para um vértice */
+/* Função recursiva para imprimir o caminho mínimo a partir da origem para um vértice */
 void imprimirCaminho(int origem, int destino, Vert G[])
 {
 	if (destino == origem)
@@ -466,7 +463,7 @@ void updateItem(MinPriorityQueue* queue, int uniqueKey, int distancia, Vert* pai
 		return;
 	}
 }
-
+/* Preenche a fila com cada vertice de G */
 void preencheFila()
 {
 	int i;
