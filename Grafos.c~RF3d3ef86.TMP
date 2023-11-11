@@ -450,6 +450,7 @@ void imprimirCaminho(int origem, int destino, Vert G[])
 {
 	if (destino == origem)
 	{
+		printf("%s", G[origem].descricao);
 		return;
 	}
 	else if (G[destino].pai == NULL)
@@ -599,17 +600,19 @@ void EncontrarCaminhoMaisCurto(Passeio passeio)
 	int i = 0;
 	int totalPath = 0;
 	printf("\nO caminho mais curto eh: ");
-	printf("%s", passeio.data[0]);
 	for (;i < passeio.index - 1; i++)
 	{
 		/* Aqui pegamos o index do vertice a partir da descricao */
 		int index = EncontrarIndexPelaDescricao(G, ordemG, passeio.data[i]);
 		/* Aqui pegamos o proximo index do vertice a partir da descricao */
 		int indexProx = EncontrarIndexPelaDescricao(G, ordemG, passeio.data[i + 1]);
-		/* Aplicamos o dijkstra para cada ponto de interesse */
 		Vert v = dijkstra(index, indexProx);
 		totalPath += v.distancia;
-		imprimirCaminho(index, indexProx, G);
+		if (i == passeio.index - 2)
+			imprimirCaminho(index, indexProx, G);
+		else
+			imprimirCaminho(index, indexProx, G);
+
 	}
 	printf("\nValor total do caminho: %d\n", totalPath);
 }

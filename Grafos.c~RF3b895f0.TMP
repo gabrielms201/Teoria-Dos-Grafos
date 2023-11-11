@@ -19,7 +19,7 @@
 /*
 	Definicoes
 */
-#define TAM_MAX_PASSEIO 500
+#define TAM_PASSEIO 500
  /* Foi utilizado esse valor ao inves de INT_MAX para não ocorrer overflow na hora da soma para comparacao no algoritmo de dijkstra */
 #define INFINITO 999999 
  /*
@@ -114,8 +114,8 @@ typedef struct
 } Passeio;
 void InserirLocalNoPasseio(Passeio* p,char* conteudo);
 Passeio CriarPasseio();
-void ImprimirPasseio(Passeio p);
 void EncontrarCaminhoMaisCurto(Passeio passeio);
+void DestruirPasseio(Passeio* passeio);
 
 /* ---------------------------------------------------------------------------- fim declaracoes | inicio de implementacoes */
 
@@ -450,6 +450,7 @@ void imprimirCaminho(int origem, int destino, Vert G[])
 {
 	if (destino == origem)
 	{
+		printf("%s", G[origem].descricao);
 		return;
 	}
 	else if (G[destino].pai == NULL)
@@ -565,21 +566,10 @@ Vert dijkstra(int origem, int destino)
 			}
 		}
 	}
-	/* Modificacao do algoritmo que retorna um destino */
 	return G[destino];
 }
 
-void ImprimirPasseio(Passeio p)
-{
-	printf("Passeio escolhido: ");
-	int i = 0;
-	for (; i < p.index; i++)
-	{
-		printf("-> %s ", p.data[i]);
-	}
-	printf("-> Minha Casa");
-}
-int EncontrarIndexPelaDescricao(Vert G[], int ordem, char* descricao)
+int findIndexByDescription(Vert G[], int ordem, char* descricao)
 {
 	int i;
 	for (i = 0; i < ordem; i++)
@@ -598,38 +588,40 @@ void EncontrarCaminhoMaisCurto(Passeio passeio)
 	InserirLocalNoPasseio(&passeio, "Minha Casa");
 	int i = 0;
 	int totalPath = 0;
-	printf("\nO caminho mais curto eh: ");
-	printf("%s", passeio.data[0]);
+	printf("%s -> ", G[0].descricao);
 	for (;i < passeio.index - 1; i++)
 	{
 		/* Aqui pegamos o index do vertice a partir da descricao */
-		int index = EncontrarIndexPelaDescricao(G, ordemG, passeio.data[i]);
+		int index = findIndexByDescription(G, ordemG, passeio.data[i]);
 		/* Aqui pegamos o proximo index do vertice a partir da descricao */
-		int indexProx = EncontrarIndexPelaDescricao(G, ordemG, passeio.data[i + 1]);
-		/* Aplicamos o dijkstra para cada ponto de interesse */
+		int indexProx = findIndexByDescription(G, ordemG, passeio.data[i + 1]);
 		Vert v = dijkstra(index, indexProx);
 		totalPath += v.distancia;
-		imprimirCaminho(index, indexProx, G);
+		printf("%s", v.descricao);
+		/* Se for o indice final, nao vamos imprimir a flechinha */
+		if (i != passeio.index- 2)
+		{
+			printf(" -> ");
+		}
 	}
-	printf("\nValor total do caminho: %d\n", totalPath);
+	printf("\nO caminho mais curto eh: %d\n", totalPath);
+}
+void DestruirPasseio(Passeio* passeio)
+{
+
 }
 Passeio CriarPasseio()
 {
-	/* Alocamos a matriz de strings */
-	char** mat = (char**)malloc(TAM_MAX_PASSEIO * sizeof(char*));
+	char** mat = (char**)malloc(TAM_PASSEIO * sizeof(char*));
 	int i = 0;
-	for (; i < TAM_MAX_PASSEIO; i++)
-		mat[i] = (char*)malloc(TAM_MAX_PASSEIO * sizeof(char));
-	/* Fim da alocacao */
-
-	/* Inicializamos a matriz com a casa como primeiro ponto do passeio */
+	for (; i < TAM_PASSEIO; i++)
+		mat[i] = (char*)malloc(TAM_PASSEIO * sizeof(char));
 	Passeio p = { 1, mat };
 	p.data[0] = "Minha Casa";
 	return p;
 }
 void InserirLocalNoPasseio(Passeio* passeio, char* conteudo)
 {
-	/* Inserimos o ponto de interesse no nosso array */
 	passeio->data[passeio->index] = conteudo;
 	passeio->index++;
 }
@@ -642,6 +634,8 @@ int main()
 	gerarGrafo();
 
 
+
+
 	Passeio passeio = CriarPasseio();
 	/* Para manipular a estrutura, basta chamar essa funcao */
 	InserirLocalNoPasseio(&passeio, "Cartorio");
@@ -650,12 +644,13 @@ int main()
 	InserirLocalNoPasseio(&passeio, "Hospital Veterinario");
 	InserirLocalNoPasseio(&passeio, "Silvio Portugal");
 
-	/* Imprime o passeio que o usuario escolheu*/
-	ImprimirPasseio(passeio);
+
+
 	EncontrarCaminhoMaisCurto(passeio);
 
 	/* Por fim, liberamos os dados da heap */
 	destroiGrafo(&G, ordemG);
 	destroiFila(queue);
+
 	return 0;
 }
