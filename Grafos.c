@@ -34,6 +34,7 @@ typedef struct vert
 	Aresta* prim;
 	Vert* pai;
 	int distancia;
+	char* descricao;
 }Vert;
 typedef struct aresta
 { /* Celula de uma lista de arestas */
@@ -163,6 +164,7 @@ int acrescentaAresta(Vert G[], int ordem, int v1, int v2, int valor)
 	A1->valor = valor;
 	A1->nome = v2;
 	A1->prox = G[v1].prim;
+
 	G[v1].pai = NULL;
 	G[v1].distancia = INFINITO;
 	G[v1].prim = A1;
@@ -396,23 +398,53 @@ void gerarGrafo()
 	acrescentaAresta(G, ordemG, 22, 24, 270);
 	/* v24 */
 	acrescentaAresta(G, ordemG, 24, 26, 1000);
+
+
+
+	G[0].descricao = "Minha Casa";
+	G[1].descricao = "Cartorio";
+	G[2].descricao = "Sushi";
+	G[3].descricao = "Posto Ipiranga";
+	G[4].descricao = "Pingo de Gente";
+	G[5].descricao = "Sesc";
+	G[6].descricao = "Colegio";
+	G[7].descricao = "Sig Informatica";
+	G[8].descricao = "Hospital Veterinario";
+	G[9].descricao = "Silvio Portugal";
+	G[10].descricao = "Escola";
+	G[11].descricao = "McDonalds";
+	G[12].descricao = "Drogasil 1";
+	G[13].descricao = "Pista de Treinamento Motos";
+	G[14].descricao = "Subprefeitura";
+	G[15].descricao = "Emef";
+	G[16].descricao = "Estacao";
+	G[17].descricao = "Terminal de Onibus";
+	G[18].descricao = "Burger King";
+	G[19].descricao = "UPA";
+	G[20].descricao = "Casa de Idosos";
+	G[21].descricao = "Crosslife";
+	G[22].descricao = "Centro Automotivo";
+	G[23].descricao = "Black Dog";
+	G[24].descricao = "Drogasil 2";
+	G[25].descricao = "Ballet";
+	G[26].descricao = "Hospital";
 }
 /* Função recursiva para imprimir o caminho mínimo a partir da origem para um vértice */
 void imprimirCaminho(int origem, int destino, Vert G[])
 {
 	if (destino == origem)
 	{
-		printf("v%d", origem);
+		printf("%s", G[origem].descricao);
 		return;
 	}
 	else if (G[destino].pai == NULL)
 	{
-		printf("Nao existe caminho de %d para %d", origem, destino);
+		printf("Nao existe caminho de %s para %s", G[origem].descricao, G[destino].descricao);
 	}
 	else
 	{
 		imprimirCaminho(origem, G[destino].pai->nome, G);
-		printf(" -> v%d", destino);
+		printf(" -> %s", G[destino].descricao);
 	}
 }
 
@@ -536,7 +568,7 @@ int main()
 	{
 		if (i != origem)
 		{
-			printf("Distancia de v%d para v%d: %d.\n --> Caminho: \t", origem, i, G[i].distancia);
+			printf("Distancia de %s para %s: %d.\n --> Caminho: \t", G[origem].descricao, G[i].descricao, G[i].distancia);
 			imprimirCaminho(origem, i, G);
 			printf("\n");
 		}
